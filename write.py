@@ -28,7 +28,26 @@ def write_to_csv(results, filename):
         'datetime_utc', 'distance_au', 'velocity_km_s',
         'designation', 'name', 'diameter_km', 'potentially_hazardous'
     )
-    # TODO: Write the results to a CSV file, following the specification in the instructions.
+    fieldnames = (
+        'datetime_utc', 'distance_au', 'velocity_km_s',
+        'designation', 'name', 'diameter_km', 'potentially_hazardous'
+    )
+
+    with open(filename, 'w', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+
+        for approach in results:
+            neo = approach.neo
+            writer.writerow({
+                'datetime_utc': approach.time_str,
+                'distance_au': approach.distance,
+                'velocity_km_s': approach.velocity,
+                'designation': neo.designation if neo else '',
+                'name': neo.name if neo and neo.name else '',
+                'diameter_km': neo.diameter if neo else float('nan'),
+                'potentially_hazardous': neo.hazardous if neo else False
+            })
 
 
 def write_to_json(results, filename):
@@ -42,4 +61,22 @@ def write_to_json(results, filename):
     :param results: An iterable of `CloseApproach` objects.
     :param filename: A Path-like object pointing to where the data should be saved.
     """
-    # TODO: Write the results to a JSON file, following the specification in the instructions.
+    output = []
+
+    for approach in results:
+        neo = approach.neo
+        entry = {
+            'datetime_utc': approach.time_str,
+            'distance_au': approach.distance,
+            'velocity_km_s': approach.velocity,
+            'neo': {
+                'designation': neo.designation if neo else '',
+                'name': neo.name if neo and neo.name else '',
+                'diameter_km': neo.diameter if neo else float('nan'),
+                'potentially_hazardous': neo.hazardous if neo else False
+            }
+        }
+        output.append(entry)
+
+    with open(filename, 'w') as f:
+        json.dump(output, f, indent=2)
